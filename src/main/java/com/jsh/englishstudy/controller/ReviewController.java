@@ -4,15 +4,13 @@ import com.jsh.englishstudy.entity.Expression;
 import com.jsh.englishstudy.entity.StudyMaterial;
 import com.jsh.englishstudy.repository.ExpressionRepository;
 import com.jsh.englishstudy.repository.StudyMaterialRepository;
-import com.jsh.englishstudy.service.PdfParserService; // 🚨 [필수] 서비스 임포트 추가
-import jakarta.annotation.PostConstruct;
+import com.jsh.englishstudy.service.PdfParserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException; // 🚨 [필수] IOException 임포트 추가
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -23,29 +21,10 @@ public class ReviewController {
 
     private final StudyMaterialRepository materialRepository;
     private final ExpressionRepository expressionRepository;
-    private final PdfParserService pdfParserService; // 🚨 [여기 추가!] 스프링이 자동으로 주입해 주도록 필드를 선언합니다.
+    private final PdfParserService pdfParserService;
 
-    // 테스트용 샘플 데이터 자동 삽입
-    @PostConstruct
-    public void initData() {
-        StudyMaterial mat1 = materialRepository.save(new StudyMaterial("20260615 슈퍼 엘니뇨 뉴스", LocalDate.of(2026, 6, 15)));
-        StudyMaterial mat2 = materialRepository.save(new StudyMaterial("20260622 교보문고 실전 회화", LocalDate.of(2026, 6, 22)));
-
-        // 6월 15일 교재 데이터
-        expressionRepository.save(new Expression(mat1.getId(), "WORD", "officially begun", "공식적으로 시작되다", null));
-        expressionRepository.save(new Expression(mat1.getId(), "WORD", "intensify", "더 강해지다", null));
-        expressionRepository.save(new Expression(mat1.getId(), "SENTENCE", "El Niño has officially begun, and it may intensify into a very strong event.", "엘니뇨가 공식적으로 시작됐고, 앞으로 매우 강한 현상으로 커질 가능성이 있습니다.", null));
-
-        // 6월 22일 교재 데이터
-        expressionRepository.save(new Expression(mat2.getId(), "WORD", "lightweight", "제형이 가벼운", null));
-        expressionRepository.save(new Expression(mat2.getId(), "DIALOGUE", "Hi, are you looking for anything in particular?", "안녕하세요, 특별히 찾으시는 책 있으세요?", "A"));
-        expressionRepository.save(new Expression(mat2.getId(), "DIALOGUE", "Yeah, I’m looking for something light.", "네, 가볍게 읽을 만한 책을 찾고 있어요.", "B"));
-
-        // 미리 테스트용 오답 문장 하나 세팅 (전체 복습 리스트 확인용)
-        Expression wrongSample = new Expression(mat1.getId(), "WORD", "knock-on effects", "연쇄적인 영향, 파급 효과", null);
-        wrongSample.setWrong(true);
-        expressionRepository.save(wrongSample);
-    }
+    // 🚨 [수정 완료] 자꾸 중복 데이터를 만들던 @PostConstruct (initData) 구역을 완전히 삭제했습니다.
+    // 이제 서버를 아무리 껐다 켜도 DB 파일이 마음대로 더러워지지 않습니다.
 
     // 1. 메인 화면 대시보드 (교재 목록 & 누적 오답 카운트)
     @GetMapping("/")
@@ -98,7 +77,7 @@ public class ReviewController {
         return "success";
     }
 
-    // 5. PDF 업로드 및 파싱 처리 API
+    // 5. PDF 업로드 및 파싱 처리 API (★ 오직 이 주소를 통해서만 데이터가 새롭게 인서트됩니다 ★)
     @PostMapping("/api/material/upload-pdf")
     public String uploadPdf(@RequestParam("pdfFile") MultipartFile file) {
         try {
@@ -114,7 +93,7 @@ public class ReviewController {
             String cleanName = originalFilename.substring(0, originalFilename.lastIndexOf(".")).trim();
 
             String title = cleanName;
-            LocalDate studyDate = LocalDate.now(); // 파일명에 날짜가 없을 경우 오늘 날짜를 기본값으로 지정
+            LocalDate studyDate = LocalDate.now();
 
             // 2. 정규식으로 앞자리 8자리 숫자(YYYYMMDD) 추출 시도
             java.util.regex.Pattern datePattern = java.util.regex.Pattern.compile("^(\\d{4})(\\d{2})(\\d{2})(.*)");
@@ -125,10 +104,8 @@ public class ReviewController {
                 int month = Integer.parseInt(matcher.group(2));
                 int day = Integer.parseInt(matcher.group(3));
 
-                // 자바 내장 타임 라이브러리로 안전하게 날짜 객체 생성 (오차 없음)
                 studyDate = LocalDate.of(year, month, day);
 
-                // 앞의 8자리 숫자를 제외한나머지 글자를 타이틀로 지정
                 title = matcher.group(4).trim();
                 if (title.isEmpty()) {
                     title = "스터디 교재 (" + studyDate + ")";
@@ -155,7 +132,7 @@ public class ReviewController {
     @ResponseBody
     public String clearFromWrong(@PathVariable Long id) {
         Expression exp = expressionRepository.findById(id).orElseThrow();
-        exp.setWrong(false); // 🚨 false로 되돌려서 오답 창고에서 제외시킵니다.
+        exp.setWrong(false);
         expressionRepository.save(exp);
         return "success";
     }

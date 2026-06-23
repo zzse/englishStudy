@@ -1,6 +1,7 @@
+#  http://localhost:8080/h2-console 접속 후에 JDBC URL : jdbc:h2:file:C:/englishstudy/englishdb 작성
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    url: jdbc:h2:file:C:/englishstudy/englishdb;MODE=MySQL;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -8,12 +9,13 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
-  # 🚨 [중요] 여기에 h2 console 옵션의 들여쓰기 칸수를 정확히 맞춰서 켜주어야 합니다!
   h2:
     console:
       enabled: true
       path: /h2-console
+      settings:
+        web-allow-others: true

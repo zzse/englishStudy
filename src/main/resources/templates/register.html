@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - English Study</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 sm:p-6">
+<div class="max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl border shadow-sm">
+    <h1 class="text-2xl sm:text-3xl font-black text-center text-gray-900 mb-1">🌱 스터디 회원가입</h1>
+    <p class="text-center text-xs text-gray-400 mb-6 sm:mb-8">사용할 닉네임과 비밀번호만으로 간편하게 계정을 만드세요.</p>
+
+    <div class="space-y-4">
+        <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">원하는 닉네임 입력</label>
+            <input type="text" id="nickname" placeholder="예: 세현, joy, tom" class="w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">비밀번호 설정</label>
+            <input type="password" id="password" placeholder="비밀번호를 입력하세요" class="w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <button onclick="handleRegister()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-md mt-6 text-sm sm:text-base">
+            회원가입 및 복습 시작하기 🚀
+        </button>
+        <div class="text-center mt-4">
+            <a href="/login" class="text-xs text-gray-500 hover:underline">이미 계정이 있으신가요? 로그인하기</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handleRegister() {
+        const nickname = document.getElementById('nickname').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if(!nickname || !password) { alert("닉네임과 비밀번호를 모두 입력해 주세요."); return; }
+
+        const params = new URLSearchParams();
+        params.append('nickname', nickname);
+        params.append('password', password);
+
+        fetch('/api/auth/register', { method: 'POST', body: params })
+            .then(res => res.text())
+            .then(status => {
+                if (status === 'SUCCESS') {
+                    alert("🎉 회원가입이 성공적으로 완료되었습니다! 로그인해 주세요.");
+                    location.href = '/login';
+                } else if (status === 'DUPLICATE_NICKNAME') {
+                    alert("❌ 이미 존재하는 닉네임입니다. 다른 닉네임을 입력해 주세요.");
+                } else {
+                    alert("가입 중 오류가 발생했습니다.");
+                }
+            });
+    }
+</script>
+</body>
+</html>
