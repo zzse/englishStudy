@@ -1,0 +1,41 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.2.5' // 본인 스프링부트 버전에 맞게 유지하셔도 됩니다.
+	id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'com.jsh'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// JPA 및 H2 데이터베이스 라이브러리
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'com.h2database:h2'
+
+	// 웹, 타임리프, 롬복
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.apache.pdfbox:pdfbox:3.0.2'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

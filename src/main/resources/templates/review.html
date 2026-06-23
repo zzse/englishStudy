@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>영어 스터디 복습룸</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .flip-container { perspective: 1000px; }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            transform-style: preserve-3d;
+            transition: transform 0.4s;
+        }
+        .flipped { transform: rotateY(180deg); }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border: 1px solid rgb(229 231 235);
+        }
+        .card-front { background-color: white; }
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: rgb(240 246 255);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-8">
+
+<div class="max-w-2xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <a href="/" class="text-sm font-semibold text-blue-600 hover:text-blue-800">⬅️ 메인으로</a>
+        <h1 class="text-2xl font-extrabold text-gray-800" th:text="${title}"></h1>
+    </div>
+
+    <div id="dialogue-title-box" class="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hidden">
+        📍 현재 상황: <span id="current-dialogue-title">일반 회화</span>
+    </div>
+
+    <div id="quiz-section">
+        <div class="w-full bg-gray-200 h-2 rounded-full mb-6">
+            <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all" style="width: 0%"></div>
+        </div>
+
+        <div class="flip-container h-[180px] mb-6">
+            <div id="quiz-card" class="card-inner">
+                <div class="card-front">
+                    <span id="card-mode-badge" class="absolute top-4 left-4 bg-gray-100 text-gray-700 text-xs font-bold px-2.5 py-0.5 rounded"></span>
+                    <div id="card-question" class="text-xl font-bold text-gray-900 text-center px-4 leading-relaxed"></div>
+                    <p class="text-[11px] text-gray-400 absolute bottom-4 right-4">정답 제출 시 카드가 뒤집힙니다 🔄</p>
+                </div>
+                <div class="card-back">
+                    <span class="text-xs font-bold text-blue-600 absolute top-4 left-4">정답 (ANSWER)</span>
+                    <div id="card-answer" class="text-xl font-bold text-blue-900 text-center px-4 leading-relaxed"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">영문 정답 입력</label>
+            <div class="flex gap-2">
+                <input type="text" id="user-answer" placeholder="여기에 영어로 정답을 입력하세요."
+                       class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                       onkeyup="if(window.event.keyCode==13){checkAnswer()}">
+                <button onclick="checkAnswer()" id="submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all">
+                    제출
+                </button>
+            </div>
+
+            <div id="feedback" class="mt-4 text-center font-bold text-lg hidden"></div>
+
+            <div id="correct-action-box" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
+                <button onclick="deleteFromWrongNotebook()" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-3 rounded-xl transition-all text-center text-sm shadow-sm">
+                    이 문장 오답 창고에서 삭제(졸업) 🎓
+                </button>
+                <button onclick="nextQuestion()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-xl transition-all text-center">
+                    다음 문장으로 넘어가기 ➡️
+                </button>
+            </div>
+
+            <div id="wrong-choice-actions" class="mt-4 grid grid-cols-2 gap-3 hidden">
+                <button onclick="nextQuestion()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-xl transition-all text-center">
+                    그냥 넘어가기 ↩️
+                </button>
+                <button onclick="saveToWrongNotebook()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all text-center shadow-sm">
+                    오답노트에 저장 📌
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-section" class="bg-white p-8 rounded-2xl border border-gray-200 shadow-lg text-center hidden">
+        <h2 class="text-3xl font-extrabold text-gray-900 mb-2">🎉 복습 완료!</h2>
+        <p class="text-gray-500 mb-6">수고하셨습니다. 이번 세션에서 저장하기로 선택한 오답 목록입니다.</p>
+        <div class="border-t pt-6 text-left">
+            <h3 class="font-bold text-red-600 mb-3">🚨 이번 라운드에 수집된 오답 리스트:</h3>
+            <ul id="wrong-list" class="space-y-2 text-sm text-gray-700 list-disc pl-5"></ul>
+        </div>
+        <a href="/" class="mt-8 inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all">
+            대시보드로 가기
+        </a>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const expressions = [[${expressions}]];
+    let currentIndex = 0;
+    let wrongAnswers = [];
+
+    function initQuiz() {
+        if (!expressions || expressions.length === 0) {
+            document.getElementById('quiz-section').innerHTML = "<div class='text-center py-12 font-bold text-gray-400'>복습할 데이터가 아직 존재하지 않습니다. 📭</div>";
+            return;
+        }
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const current = expressions[currentIndex];
+        const card = document.getElementById('quiz-card');
+        card.classList.remove('flipped');
+
+        document.getElementById('user-answer').value = '';
+        document.getElementById('user-answer').disabled = false;
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('feedback').classList.add('hidden');
+
+        // 버튼 상태 박스 초기화
+        document.getElementById('correct-action-box').classList.add('hidden');
+        document.getElementById('wrong-choice-actions').classList.add('hidden');
+
+        // Progress Bar 업데이트
+        const progress = (currentIndex / expressions.length) * 100;
+        document.getElementById('progress-bar').style.width = progress + '%';
+
+        // 질문 내용 및 정답 내용 세팅 구역
+        if (current.category === 'DIALOGUE') {
+            document.getElementById('card-question').innerText = current.korean;
+            document.getElementById('card-answer').innerText = current.english;
+            document.getElementById('card-mode-badge').innerText = "💬 DIALOGUE (Role: " + current.speaker + ")";
+
+            if (current.dialogueTitle) {
+                document.getElementById('current-dialogue-title').innerText = current.dialogueTitle;
+                document.getElementById('dialogue-title-box').classList.remove('hidden');
+            } else {
+                document.getElementById('dialogue-title-box').classList.add('hidden');
+            }
+        } else {
+            document.getElementById('dialogue-title-box').classList.add('hidden');
+            document.getElementById('card-mode-badge').innerText = current.category === 'WORD' ? '🎯 WORD' : '📰 SENTENCE';
+            document.getElementById('card-question').innerText = current.korean;
+            document.getElementById('card-answer').innerText = current.english;
+        }
+
+        setTimeout(() => {
+            document.getElementById('user-answer').focus();
+        }, 50);
+    }
+
+    function checkAnswer() {
+        const current = expressions[currentIndex];
+        const userAns = document.getElementById('user-answer').value.trim().toLowerCase();
+        const originalAns = current.english.trim().toLowerCase();
+
+        const feedbackDiv = document.getElementById('feedback');
+        const card = document.getElementById('quiz-card');
+
+        card.classList.add('flipped');
+        feedbackDiv.classList.remove('hidden');
+
+        document.getElementById('user-answer').disabled = true;
+        document.getElementById('submit-btn').disabled = true;
+
+        if (userAns === originalAns || (originalAns.includes(userAns) && userAns.length > 2)) {
+            feedbackDiv.innerText = "⭕ 정답입니다!";
+            feedbackDiv.className = "mt-4 text-center font-bold text-lg text-green-600";
+
+            // 🚨 맞췄을 때는 다음 버튼과 오답 졸업 버튼 세트를 함께 오픈
+            document.getElementById('correct-action-box').classList.remove('hidden');
+        } else {
+            feedbackDiv.innerText = "❌ 틀렸습니다! 오답노트 저장 여부를 선택하세요.";
+            feedbackDiv.className = "mt-4 text-center font-bold text-lg text-red-600";
+
+            // 틀렸을 때는 그냥 넘어가기 vs 저장 선택지 오픈
+            document.getElementById('wrong-choice-actions').classList.remove('hidden');
+        }
+    }
+
+    // 🚨 사용자가 '오답노트에 저장' 버튼을 직접 눌렀을 때 호출
+    function saveToWrongNotebook() {
+        const current = expressions[currentIndex];
+
+        if(!wrongAnswers.includes(current)) {
+            wrongAnswers.push(current);
+        }
+
+        fetch('/api/expressions/' + current.id + '/wrong', { method: 'POST' })
+            .then(() => {
+                nextQuestion();
+            })
+            .catch(err => {
+                console.error("오답 저장 실패:", err);
+                nextQuestion();
+            });
+    }
+
+    // 🚨 [새로 추가] 사용자가 '오답 창고에서 삭제' 버튼을 직접 눌렀을 때 호출
+    function deleteFromWrongNotebook() {
+        const current = expressions[currentIndex];
+
+        fetch('/api/expressions/' + current.id + '/clear-wrong', { method: 'POST' })
+            .then(() => {
+                alert("이 표현은 오답 창고에서 졸업(삭제) 되었습니다! 🎓");
+                nextQuestion();
+            })
+            .catch(err => {
+                console.error("오답 삭제 실패:", err);
+                nextQuestion();
+            });
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < expressions.length) {
+            showQuestion();
+        } else {
+            document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('dialogue-title-box').classList.add('hidden');
+            document.getElementById('result-section').classList.remove('hidden');
+
+            const wrongListUl = document.getElementById('wrong-list');
+            wrongListUl.innerHTML = '';
+
+            if(wrongAnswers.length === 0) {
+                wrongListUl.innerHTML = "<li class='text-green-600 font-semibold list-none'>💯 완벽해요! 이번 라운드에 저장된 오답이 없습니다.</li>";
+            } else {
+                wrongAnswers.forEach(item => {
+                    const li = document.createElement('li');
+                    let tag = item.dialogueTitle ? `[${item.dialogueTitle}] ` : `[${item.category}] `;
+                    li.innerHTML = `<strong>${tag}</strong> ${item.english} <span class='text-gray-400'>(${item.korean})</span>`;
+                    wrongListUl.appendChild(li);
+                });
+            }
+        }
+    }
+    window.onload = initQuiz;
+</script>
+</body>
+</html>
