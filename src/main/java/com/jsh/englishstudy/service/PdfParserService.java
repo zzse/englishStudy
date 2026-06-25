@@ -2,12 +2,14 @@ package com.jsh.englishstudy.service;
 
 import com.jsh.englishstudy.entity.Expression;
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -19,7 +21,12 @@ public class PdfParserService {
     public List<Expression> parsePdfToExpressions(MultipartFile file, Long materialId) throws IOException {
         List<Expression> expressions = new ArrayList<>();
 
-        try (PDDocument document = Loader.loadPDF(file.getBytes())) {
+        // 🚨 [핵심 개선] file.getBytes()로 메모리를 폭발시키는 대신, InputStream 스트림을 직접 엽니다.
+        // 또한 setupTempFileOnly() 설정을 추가하여 웅장한 PDF 파싱 가상 개체들을 RAM이 아닌
+        // Render의 물리적 임시 디스크 볼륨 공간에 캐싱하도록 유도합니다. (512MB RAM 완벽 사수 🛡️)
+        try (InputStream inputStream = file.getInputStream();
+             PDDocument document = Loader.loadPDF(inputStream, MemoryUsageSetting.setupTempFileOnly())) {
+
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
 
@@ -32,7 +39,7 @@ public class PdfParserService {
             StringBuilder engBuffer = new StringBuilder();
             StringBuilder korBuffer = new StringBuilder();
 
-            // 🚨 대화문(A: 또는 B:)을 잡아내는 완벽한 정규식 패턴 (공백/특수문자 포함)
+            // 대화문(A: 또는 B:)을 잡아내는 정규식 패턴
             Pattern dialoguePattern = Pattern.compile(".*([A-B])\\s*:\\s*(.*)");
 
             for (int i = 0; i < lines.length; i++) {
@@ -42,23 +49,20 @@ public class PdfParserService {
                 // 시스템 노이즈 텍스트 필터링
                 if (line.contains("Page") || line.contains("UPGRADE") || line.contains("COMPREHENSION") ||
                         line.contains("핵심 표현") || line.contains("관련 표현") || line.contains("도서 관련") || line.contains("뷰티")) {
-                    // 🚨 단, 대화 섹션의 핵심 단어인 DIALOGUE 제목 자체는 패스하되 상태 변경용으로 체크 안 함
                     continue;
                 }
 
-                // 🚨 [치트키 옵션 1] 현재 섹션 위치와 상관없이, 줄 어디선가 "A:" 나 "B:"가 감지되면 무조건 대화문으로 우선 처리!!
+                // 현재 섹션 위치와 상관없이, 줄 어디선가 "A:" 나 "B:"가 감지되면 무조건 대화문으로 우선 처리
                 Matcher dialogueMatcher = dialoguePattern.matcher(line);
                 if (dialogueMatcher.matches()) {
                     String speaker = dialogueMatcher.group(1).trim(); // A 또는 B
                     String content = dialogueMatcher.group(2).trim(); // 대사 내용
 
                     if (!containsKorean(content)) {
-                        // 영어 대사 저장
                         Expression dialogueExp = new Expression(materialId, "DIALOGUE", content, "[회화] 번역문을 입력하세요.", speaker);
                         dialogueExp.setDialogueTitle(currentDialogueTitle);
                         expressions.add(dialogueExp);
                     } else {
-                        // 한글 번역 대사 매칭 (직전 대사에 번역 주입)
                         if (!expressions.isEmpty()) {
                             Expression lastExp = expressions.get(expressions.size() - 1);
                             if ("DIALOGUE".equals(lastExp.getCategory()) && speaker.equals(lastExp.getSpeaker())) {
@@ -66,10 +70,10 @@ public class PdfParserService {
                             }
                         }
                     }
-                    continue; // 대화문 처리 완료 시 아래 일반 섹션 로직은 건너뜀!
+                    continue;
                 }
 
-                // 🚨 [치트키 옵션 2] 줄 시작이 "6. 교보문고에 가다" 처럼 숫자로 시작하고 한글이 포함되어 있으면 대화방 제목으로 갱신!!
+                // 줄 시작이 "6. 교보문고에 가다" 처럼 숫자로 시작하고 한글이 포함되어 있으면 대화방 제목으로 갱신
                 if (line.matches("^\\d+\\.\\s*.*") && containsKorean(line)) {
                     currentDialogueTitle = line;
                     continue;
