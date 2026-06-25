@@ -1,27 +1,29 @@
 spring:
-  # 15인 스터디 규모에 맞춰 PDF 업로드 용량 제한 해제 (30MB)
   servlet:
     multipart:
       max-file-size: 30MB
       max-request-size: 50MB
 
-  # 🚨 [완벽 매칭] Supabase 영구 데이터베이스 연동 최종본 (진짜 비번 반영)
   datasource:
-    # 💡 password= 뒤에 알려주신 패스워드가 정확하게 문자로 들어갔습니다.
-    url: jdbc:postgresql://aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?user=postgres.alyphoareyjeeizdbwqx&password=qlalfqjsghskehahffk!
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:file:~/englishstudy/englishdb;MODE=MySQL;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      # 서버 구동 시 단어장, 오답노트 테이블을 Supabase 공간에 자동으로 빌드해 줍니다.
       ddl-auto: update
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
-        format_sql: false
+        format_sql: true
 
-# 15인 동시 접속 트래픽 제어 설정
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
 server:
   tomcat:
     connection-timeout: 60000

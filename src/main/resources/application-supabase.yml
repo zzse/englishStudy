@@ -1,0 +1,13 @@
+# Render 실서버 환경 전용 독립 파일
+spring:
+  datasource:
+    # URL 쿼리 파라미터 방식으로 테넌트 식별자를 정확히 주입합니다.
+    url: jdbc:postgresql://aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?user=postgres.alyphoareyjeeizdbwqx
+    username: ""
+    password: qlalfqjsghskehahffk!
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
