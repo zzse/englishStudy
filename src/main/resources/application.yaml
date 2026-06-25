@@ -1,21 +1,35 @@
-#  http://localhost:8080/h2-console 접속 후에 JDBC URL : jdbc:h2:file:C:/englishstudy/englishdb 작성
 spring:
+  # 파일 업로드 용량 제한 해제 (Render 사양에 맞춰 안정적인 크기로 조절)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+
   datasource:
-    url: jdbc:h2:file:C:/englishstudy/englishdb;MODE=MySQL;AUTO_SERVER=TRUE
+    # 로컬과 Render 배포 환경 모두 연동되는 홈 디렉터리 기반 파일 경로
+    url: jdbc:h2:file:~/englishstudy/englishdb;MODE=MySQL;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
     password:
+
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
+
   h2:
     console:
       enabled: true
       path: /h2-console
       settings:
         web-allow-others: true
+
+# Render 무료 서버 환경에서 대용량 파싱 시 네트워크가 끊기는 현상 방지 설정
+server:
+  tomcat:
+    connection-timeout: 60000
+    max-keep-alive-requests: 100
