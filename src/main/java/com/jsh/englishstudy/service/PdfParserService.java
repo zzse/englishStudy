@@ -2,7 +2,7 @@ package com.jsh.englishstudy.service;
 
 import com.jsh.englishstudy.entity.Expression;
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.io.MemoryUsageSetting;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
@@ -21,11 +21,9 @@ public class PdfParserService {
     public List<Expression> parsePdfToExpressions(MultipartFile file, Long materialId) throws IOException {
         List<Expression> expressions = new ArrayList<>();
 
-        // 🚨 [핵심 개선] file.getBytes()로 메모리를 폭발시키는 대신, InputStream 스트림을 직접 엽니다.
-        // 또한 setupTempFileOnly() 설정을 추가하여 웅장한 PDF 파싱 가상 개체들을 RAM이 아닌
-        // Render의 물리적 임시 디스크 볼륨 공간에 캐싱하도록 유도합니다. (512MB RAM 완벽 사수 🛡️)
         try (InputStream inputStream = file.getInputStream();
-             PDDocument document = Loader.loadPDF(inputStream, MemoryUsageSetting.setupTempFileOnly())) {
+             RandomAccessReadBuffer buffer = new RandomAccessReadBuffer(inputStream);
+             PDDocument document = Loader.loadPDF(buffer)) {
 
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
