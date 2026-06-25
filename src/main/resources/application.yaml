@@ -1,12 +1,12 @@
 spring:
-  # 파일 업로드 용량 제한 해제 (Render 사양에 맞춰 안정적인 크기로 조절)
+  # 1. 파일 제한을 서버 사양에 맞게 아주 콤팩트하게 고정합니다.
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 20MB
+      max-file-size: 2MB
+      max-request-size: 5MB
 
   datasource:
-    # 로컬과 Render 배포 환경 모두 연동되는 홈 디렉터리 기반 파일 경로
+    # 안전하고 가벼운 H2 파일 DB 경로 설정
     url: jdbc:h2:file:~/englishstudy/englishdb;MODE=MySQL;AUTO_SERVER=TRUE
     driver-class-name: org.h2.Driver
     username: sa
@@ -15,11 +15,12 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
+      # ddl-auto가 내포하는 무거운 검증 단계를 줄이기 위해 확실하게 지정
       ddl-auto: update
-    show-sql: false
+    show-sql: false # 무료 서버의 리소스 절감을 위해 콘솔 로그 출력을 최소화합니다.
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
   h2:
     console:
@@ -28,8 +29,9 @@ spring:
       settings:
         web-allow-others: true
 
-# Render 무료 서버 환경에서 대용량 파싱 시 네트워크가 끊기는 현상 방지 설정
+# 2. 내장 톰캣 서버의 가용 자원을 최대한 콤팩트하게 쪼개어 타임아웃을 방지합니다.
 server:
   tomcat:
-    connection-timeout: 60000
-    max-keep-alive-requests: 100
+    connection-timeout: 20000 # 20초 동안 응답이 없으면 대기 강제 조절
+    threads:
+      max: 10 # 무료 서버 메모리 방어를 위해 스레드 개수를 기본 200개에서 10개로 대폭 제한합니다.
