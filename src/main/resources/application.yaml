@@ -1,37 +1,29 @@
 spring:
-  # 1. 파일 제한을 서버 사양에 맞게 아주 콤팩트하게 고정합니다.
+  # 15인 스터디 규모에 맞춰 PDF 업로드 용량 제한 해제 (30MB)
   servlet:
     multipart:
-      max-file-size: 2MB
-      max-request-size: 5MB
+      max-file-size: 30MB
+      max-request-size: 50MB
 
+  # 🚨 [완벽 매칭] Supabase 영구 데이터베이스 연동 최종본 (진짜 비번 반영)
   datasource:
-    # 안전하고 가벼운 H2 파일 DB 경로 설정
-    url: jdbc:h2:file:~/englishstudy/englishdb;MODE=MySQL;AUTO_SERVER=TRUE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    # 💡 password= 뒤에 알려주신 패스워드가 정확하게 문자로 들어갔습니다.
+    url: jdbc:postgresql://aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?user=postgres.alyphoareyjeeizdbwqx&password=qlalfqjsghskehahffk!
+    driver-class-name: org.postgresql.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      # ddl-auto가 내포하는 무거운 검증 단계를 줄이기 위해 확실하게 지정
+      # 서버 구동 시 단어장, 오답노트 테이블을 Supabase 공간에 자동으로 빌드해 줍니다.
       ddl-auto: update
-    show-sql: false # 무료 서버의 리소스 절감을 위해 콘솔 로그 출력을 최소화합니다.
+    show-sql: false
     properties:
       hibernate:
         format_sql: false
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
-
-# 2. 내장 톰캣 서버의 가용 자원을 최대한 콤팩트하게 쪼개어 타임아웃을 방지합니다.
+# 15인 동시 접속 트래픽 제어 설정
 server:
   tomcat:
-    connection-timeout: 20000 # 20초 동안 응답이 없으면 대기 강제 조절
+    connection-timeout: 60000
     threads:
-      max: 10 # 무료 서버 메모리 방어를 위해 스레드 개수를 기본 200개에서 10개로 대폭 제한합니다.
+      max: 20
