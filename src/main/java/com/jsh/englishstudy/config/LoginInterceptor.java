@@ -18,15 +18,25 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String requestURI = request.getRequestURI();
         HttpSession session = request.getSession();
         User loginUser = (User) session.getAttribute("loginUser");
+
+        // 🚨 [인프라 꼬임을 원천 차단하는 무적의 프리패스 라인]
+        // 어떤 경로로 우회해서 들어오든, 현재 요청에 /login, /register, 정적 파일(css/js)이 묻어있다면
+        // 세션이고 쿠키고 나발이고 무조건 통과시켜야 302 리디렉션 늪에 안 빠집니다!
+        if (requestURI.equals("/login") || requestURI.equals("/register")
+                || requestURI.contains("/css") || requestURI.contains("/js") || requestURI.contains("/images")
+                || requestURI.equals("/error")) {
+            return true;
+        }
 
         // 1. 이미 세션 로그인이 되어 있으면 패스
         if (loginUser != null) {
             return true;
         }
 
-        // 2. 세션은 없는데 브라우저에 '자동 로그인 쿠키'가 남아있는지 검사
+        // 2. 자동 로그인 쿠키 검사
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -35,7 +45,6 @@ public class LoginInterceptor implements HandlerInterceptor {
                     User user = userRepository.findByNickname(nickname).orElse(null);
 
                     if (user != null && user.isRegistered()) {
-                        // 쿠키 유효성 통과 시 자동으로 세션 생성 (자동로그인 성공!)
                         session.setAttribute("loginUser", user);
                         return true;
                     }
@@ -43,7 +52,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             }
         }
 
-        // 3. 둘 다 없으면 로그인 페이지로 튕겨내기
+        // 3. 둘 다 없으면 로그인 페이지로 강제 이동
         response.sendRedirect("/login");
         return false;
     }
