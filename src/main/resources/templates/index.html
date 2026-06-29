@@ -14,7 +14,7 @@
         <div>
             <h1 class="text-2xl sm:text-3xl font-black text-gray-900">🚀 English Study Room</h1>
             <p class="text-xs sm:text-sm text-gray-500 mt-1">
-                안녕하세요, <span class="font-extrabold text-blue-600" th:text="${session.loginUser.nickname}">사용자</span>님! 오늘도 열공하세요. 🔥
+                안녕하세요, <span class="font-extrabold text-blue-600" th:text="${session.loginUser?.nickname != null ? session.loginUser.nickname : '스터디원'}">사용자</span>님! 오늘도 열공하세요. 🔥
             </p>
         </div>
 
@@ -67,7 +67,7 @@
 
                 <div class="mt-4 p-3.5 bg-red-50/50 rounded-xl border border-red-100/70 text-xs text-red-800/90 space-y-1.5 shadow-sm">
                     <p class="font-bold flex items-center gap-1 text-red-900">💡 스마트 오답 관리 가이드</p>
-                    <p class="text-gray-500 leading-relaxed">• 퀴즈를 풀다가 틀린 단어와 대화문은 자동으로 여기에 누적됩니다.</p>
+                    <p class="text-gray-500 leading-relaxed">• 퀴즈를 풀다가 틀린 단어 and 대화문은 자동으로 여기에 누적됩니다.</p>
                     <p class="text-gray-500 leading-relaxed">• 아는 문장은 과감하게 <strong>[창고에서 빼기]</strong>를 눌러 졸업시키세요!</p>
                 </div>
             </div>
