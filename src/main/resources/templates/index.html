@@ -30,10 +30,9 @@
                 <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-1">📚 교재 및 학습 자료</h2>
                 <p class="text-xs sm:text-sm text-gray-400 mb-4">새로운 대화문이나 단어장 PDF를 업로드하여 학습을 시작하세요.</p>
 
-                <form th:action="@{/api/material/upload-pdf}" method="post" enctype="multipart/form-data" class="space-y-3">
-                    <input type="file" name="pdfFile" class="w-full text-xs sm:text-sm text-gray-500 file:mr-3 sm:file:mr-4 file:py-2 file:px-3 sm:file:px-4 file:rounded-xl file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" required/>
-
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-sm">
+                <form id="uploadForm" class="space-y-3">
+                    <input type="file" id="pdfFile" name="pdfFile" class="w-full text-xs sm:text-sm text-gray-500 file:mr-3 sm:file:mr-4 file:py-2 file:px-3 sm:file:px-4 file:rounded-xl file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" required/>
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-sm">
                         새로운 PDF 분석 및 등록 ⚡
                     </button>
                 </form>
@@ -68,7 +67,7 @@
 
                 <div class="mt-4 p-3.5 bg-red-50/50 rounded-xl border border-red-100/70 text-xs text-red-800/90 space-y-1.5 shadow-sm">
                     <p class="font-bold flex items-center gap-1 text-red-900">💡 스마트 오답 관리 가이드</p>
-                    <p class="text-gray-500 leading-relaxed">• 퀴즈를 풀다가 틀린 단어 and 대화문은 자동으로 여기에 누적됩니다.</p>
+                    <p class="text-gray-500 leading-relaxed">• 퀴즈를 풀다가 틀린 단어와 대화문은 자동으로 여기에 누적됩니다.</p>
                     <p class="text-gray-500 leading-relaxed">• 아는 문장은 과감하게 <strong>[창고에서 빼기]</strong>를 눌러 졸업시키세요!</p>
                 </div>
             </div>
@@ -87,6 +86,50 @@
     </div>
 
 </div>
+
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // 순수 HTML 서밋 차단 (PC 브라우저 패킷 드랍 우회)
+
+        const fileInput = document.getElementById('pdfFile');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (!fileInput.files[0]) {
+            alert('PDF 파일을 선택해 주세요!');
+            return;
+        }
+
+        // 전송 진행 중 UI 피드백 변경
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'PC 보안 프로토콜 분석 및 데이터 파싱 중... ⏳';
+
+        const formData = new FormData();
+        formData.append('pdfFile', fileInput.files[0]);
+
+        // 자바스크립트 Fetch API를 통해 브라우저 커넥션을 안전하게 고정하고 바이너리를 전송합니다.
+        fetch('/api/material/upload-pdf', {
+            method: 'POST',
+            body: formData
+            // 브라우저가 알아서 세션 쿠키를 함께 태워 보내도록 명시하지 않고 폼데이터 바운더리를 태웁니다.
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('PC 프로토콜 파싱 대성공! 교재 데이터가 Supabase로 완벽히 이전되었습니다. 🎉');
+                window.location.reload(); // 성공 시 화면 리프레시하여 목록 갱신
+            } else {
+                alert('서버 응답 오류가 발생했습니다. (Status: ' + response.status + ')');
+                submitBtn.disabled = false;
+                submitBtn.innerText = '새로운 PDF 분석 및 등록 ⚡';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('PC 전송 스트림이 일시적으로 정체되었습니다. 다시 시도해 주세요.');
+            submitBtn.disabled = false;
+            submitBtn.innerText = '새로운 PDF 분석 및 등록 ⚡';
+        });
+    });
+</script>
 
 </body>
 </html>
