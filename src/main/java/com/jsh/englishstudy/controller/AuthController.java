@@ -27,10 +27,13 @@ public class AuthController {
         return "register";
     }
 
-    // 1. 누구나 가능한 회원가입 처리 로직 (닉네임 중복만 확인)
+    // 1. 누구나 가능한 회원가입 처리 로직 (가입 즉시 세션 강제 발급형으로 업그레이드)
     @PostMapping("/api/auth/register")
     @ResponseBody
-    public String register(@RequestParam String nickname, @RequestParam String password) {
+    public String register(@RequestParam String nickname,
+                           @RequestParam String password,
+                           HttpSession session) { // 🚀 자동 로그인을 위해 세션 객체를 파라미터에 추가합니다.
+
         // 이미 해당 닉네임으로 가입한 사람이 있는지 검사
         if (userRepository.findByNickname(nickname).isPresent()) {
             return "DUPLICATE_NICKNAME";
@@ -42,7 +45,13 @@ public class AuthController {
         newUser.setPassword(password); // (스터디용 단순 프로젝트이므로 평문 처리)
         newUser.setRegistered(true);
 
-        userRepository.save(newUser);
+        User savedUser = userRepository.save(newUser);
+
+        // 🚨 [오늘의 핵심 무적 치트키]
+        // joy로 가입하자마자 메인 화면에서 '스터디원님'이 아니라 진짜 'joy님'이 뜨도록
+        // 가입 성공 데이터베이스 트랜잭션이 끝나는 즉시 세션 인증 도장을 강제로 콱 찍어버립니다!
+        session.setAttribute("loginUser", savedUser);
+
         return "SUCCESS";
     }
 
