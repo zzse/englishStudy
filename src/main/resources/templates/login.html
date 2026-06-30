@@ -1,37 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로그인 - English Study</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 sm:p-6">
 
-<div class="max-w-md w-full bg-white p-6 sm:p-8 rounded-2xl border shadow-sm">
-    <h1 class="text-2xl sm:text-3xl font-black text-center text-gray-900 mb-1">🚀 English Study</h1>
-    <p class="text-center text-xs text-gray-400 mb-6 sm:mb-8">스터디 복습룸에 로그인하세요.</p>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            /* 배경색: 따뜻한 아이보리 톤 */
+            background-color: #FFF4E6;
+        }
+
+        .font-jua {
+            font-family: 'Jua', sans-serif;
+        }
+
+        /* 글씨 외곽선 (하얀 글씨 + 검은 테두리) */
+        .text-outline {
+            color: white;
+            -webkit-text-stroke: 2px #1f2937;
+            paint-order: stroke fill;
+        }
+
+        /* 삐뚤빼뚤한 종이 오리기 효과 */
+        .cutout-box {
+            border: 3px solid #1f2937;
+            border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+            box-shadow: 3px 4px 0px #1f2937;
+        }
+
+        /* 꽃 모양(톱니바퀴) 효과 */
+        .flower-box {
+            border: 3px solid #1f2937;
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            box-shadow: 3px 4px 0px #1f2937;
+        }
+
+        /* 폼 박스 굵은 테두리와 그림자 */
+        .brutal-box {
+            border: 3px solid #1f2937;
+            border-radius: 1.5rem;
+            box-shadow: 6px 8px 0px #1f2937;
+        }
+
+        /* 입력창 포커스 애니메이션 */
+        .brutal-input {
+            border: 2px solid #1f2937;
+            transition: all 0.2s ease-in-out;
+        }
+        .brutal-input:focus {
+            box-shadow: 3px 3px 0px #1f2937;
+            transform: translate(-2px, -2px);
+            outline: none;
+        }
+
+        /* 버튼 누름 애니메이션 */
+        .brutal-btn {
+            border: 3px solid #1f2937;
+            box-shadow: 4px 5px 0px #1f2937;
+            transition: all 0.1s active;
+        }
+        .brutal-btn:active {
+            box-shadow: 0px 0px 0px #1f2937;
+            transform: translate(4px, 5px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 overflow-x-hidden">
+
+<div class="mb-8 flex flex-col items-center gap-3 font-jua text-4xl sm:text-5xl font-bold cursor-default select-none tracking-wider">
+    <div class="flex flex-wrap justify-center gap-2">
+        <div class="cutout-box bg-[#FF85A2] px-3 py-1.5 transform -rotate-6 hover:scale-110 transition-transform"><span class="text-outline">E</span></div>
+        <div class="flower-box bg-[#4DB8FF] px-4 py-2 transform rotate-3 hover:scale-110 transition-transform"><span class="text-outline">N</span></div>
+        <div class="cutout-box bg-[#FFD166] px-3 py-1.5 transform -rotate-3 hover:scale-110 transition-transform"><span class="text-outline">G</span></div>
+        <div class="cutout-box bg-[#47D1A0] px-3 py-1.5 transform rotate-6 hover:scale-110 transition-transform"><span class="text-outline">L</span></div>
+        <div class="cutout-box bg-[#9D84FF] px-3 py-1.5 transform -rotate-6 hover:scale-110 transition-transform"><span class="text-outline">I</span></div>
+        <div class="flower-box bg-[#FF8C42] px-4 py-2 transform rotate-2 hover:scale-110 transition-transform"><span class="text-outline">S</span></div>
+        <div class="cutout-box bg-[#FF85A2] px-3 py-1.5 transform -rotate-2 hover:scale-110 transition-transform"><span class="text-outline">H</span></div>
+    </div>
+    <div class="flex flex-wrap justify-center gap-2 mt-2">
+        <div class="cutout-box bg-[#47D1A0] px-3 py-1.5 transform rotate-3 hover:scale-110 transition-transform"><span class="text-outline">S</span></div>
+        <div class="cutout-box bg-[#FFD166] px-3 py-1.5 transform -rotate-6 hover:scale-110 transition-transform"><span class="text-outline">T</span></div>
+        <div class="flower-box bg-[#9D84FF] px-4 py-2 transform rotate-6 hover:scale-110 transition-transform"><span class="text-outline">U</span></div>
+        <div class="cutout-box bg-[#FF8C42] px-3 py-1.5 transform -rotate-3 hover:scale-110 transition-transform"><span class="text-outline">D</span></div>
+        <div class="cutout-box bg-[#4DB8FF] px-3 py-1.5 transform rotate-2 hover:scale-110 transition-transform"><span class="text-outline">Y</span></div>
+    </div>
+</div>
+
+<div class="max-w-md w-full bg-white p-6 sm:p-8 brutal-box relative z-10">
+    <div class="absolute -top-4 -right-4 text-4xl transform rotate-12">🚀</div>
+
+    <p class="text-center text-sm font-bold text-gray-600 mb-6 sm:mb-8 font-jua text-lg">스터디 복습룸에 입장하세요!</p>
 
     <div class="space-y-4">
         <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">닉네임</label>
-            <input type="text" id="nickname" placeholder="닉네임을 입력하세요" class="w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <label class="block text-xs font-black text-gray-800 mb-1.5 tracking-wide">닉네임</label>
+            <input type="text" id="nickname" placeholder="닉네임을 입력하세요" class="w-full px-4 py-3 brutal-input rounded-xl text-sm bg-gray-50">
         </div>
         <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">비밀번호</label>
-            <input type="password" id="password" placeholder="비밀번호를 입력하세요" class="w-full px-4 py-2.5 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <label class="block text-xs font-black text-gray-800 mb-1.5 tracking-wide">비밀번호</label>
+            <input type="password" id="password" placeholder="비밀번호를 입력하세요" class="w-full px-4 py-3 brutal-input rounded-xl text-sm bg-gray-50" onkeyup="if(window.event.keyCode==13){handleLogin()}">
         </div>
 
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2">
-            <label class="flex items-center gap-2 text-xs text-gray-600 font-medium cursor-pointer">
-                <input type="checkbox" id="rememberMe" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
-                한 달간 자동 로그인 유지 🔑
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3">
+            <label class="flex items-center gap-2 text-xs text-gray-700 font-bold cursor-pointer">
+                <input type="checkbox" id="rememberMe" class="rounded brutal-input w-4 h-4 text-blue-600 focus:ring-0 cursor-pointer">
+                한 달간 로그인 유지 📌
             </label>
-            <a href="/register" class="text-xs text-blue-600 hover:underline font-semibold self-start sm:self-auto">처음이신가요? 회원가입 ➡️</a>
+            <a href="/register" class="text-xs text-[#FF8C42] hover:text-[#e6732d] font-black self-start sm:self-auto transition-colors">
+                처음이신가요? 회원가입 ➡️
+            </a>
         </div>
 
-        <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-md mt-6 text-sm sm:text-base">
-            복습룸 입장하기 ⚡
+        <button onclick="handleLogin()" class="w-full bg-[#4DB8FF] text-white font-jua text-xl py-3.5 rounded-xl mt-6 brutal-btn tracking-widest relative overflow-hidden group">
+            <span class="text-outline relative z-10">입장하기 ⚡</span>
         </button>
     </div>
 </div>
@@ -42,7 +127,10 @@
         const password = document.getElementById('password').value.trim();
         const rememberMe = document.getElementById('rememberMe').checked;
 
-        if(!nickname || !password) { alert("모든 칸을 입력해 주세요."); return; }
+        if(!nickname || !password) {
+            alert("모든 칸을 입력해 주세요! 📝");
+            return;
+        }
 
         const params = new URLSearchParams();
         params.append('nickname', nickname);

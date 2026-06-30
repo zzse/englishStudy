@@ -8,77 +8,135 @@
 
     <title>영어 스터디 복습룸</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 🌟 배달의민족 주아체 불러오기 -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
     <style>
-        .flip-container { perspective: 1000px; }
-        .card-inner { position: relative; width: 100%; height: 200px; transform-style: preserve-3d; transition: transform 0.4s; }
+        body {
+            background-color: #F8FAFC;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .font-jua { font-family: 'Jua', sans-serif; }
+
+        /* 3D 카드 뒤집기 및 그림자 고정 */
+        .flip-container { position: relative; perspective: 1000px; width: 100%; height: 220px; }
+        .flip-shadow { position: absolute; top: 6px; left: 6px; width: 100%; height: 100%; background-color: #1f2937; border-radius: 1.5rem; z-index: 0; }
+        .card-inner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1); z-index: 1; }
         .flipped { transform: rotateY(180deg); }
         .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid rgb(229 231 235); }
         .card-front { background-color: white; }
-        .card-back { transform: rotateY(180deg); background-color: rgb(240 246 255); }
+        .card-back { transform: rotateY(180deg); background-color: #F8FAFC; }
+
+        /* 🌟 공통 브루탈리즘 스타일 */
+        .brutal-box { border: 3px solid #1f2937; border-radius: 1.5rem; box-shadow: 6px 8px 0px #1f2937; background-color: white; }
+        .brutal-input { border: 3px solid #1f2937; transition: all 0.2s ease-in-out; }
+        .brutal-input:focus { box-shadow: 4px 4px 0px #1f2937; transform: translate(-2px, -2px); outline: none; }
+        .brutal-btn { border: 3px solid #1f2937; box-shadow: 4px 5px 0px #1f2937; transition: all 0.1s active; cursor: pointer; }
+        .brutal-btn:active { box-shadow: 0px 0px 0px #1f2937; transform: translate(4px, 5px); }
+        .brutal-badge { border: 2px solid #1f2937; box-shadow: 2px 3px 0px #1f2937; }
+
+        .title-outline { -webkit-text-stroke: 1.5px #1f2937; color: white; }
+        .text-outline { -webkit-text-stroke: 1px #1f2937; color: white; paint-order: stroke fill; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-4 sm:p-8">
+<body class="min-h-screen p-4 sm:p-8">
 
 <div class="max-w-2xl mx-auto">
-    <div class="flex justify-between items-center mb-4 sm:mb-6">
-        <a href="/" class="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-800">⬅️ 메인으로</a>
-        <h1 class="text-lg sm:text-2xl font-extrabold text-gray-800 truncate pl-4" th:text="${title}">복습 테스트</h1>
+    <!-- 헤더 영역 -->
+    <div class="flex justify-between items-center mb-6 sm:mb-8 bg-[#9D84FF] p-4 sm:p-5 rounded-2xl brutal-box border-b-4">
+        <a href="/" class="bg-white text-gray-800 font-jua text-xs sm:text-sm px-4 py-2.5 rounded-xl brutal-badge hover:bg-gray-100 transition-colors">
+            ⬅️ 메인으로
+        </a>
+        <h1 class="text-2xl sm:text-3xl font-jua title-outline truncate pl-4 drop-shadow-sm tracking-wider" th:text="${title}">복습 테스트</h1>
     </div>
 
-    <div id="dialogue-title-box" class="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm hidden">
-        📍 현재 상황: <span id="current-dialogue-title">일반 회화</span>
+    <!-- 현재 상황 뱃지 -->
+    <div id="dialogue-title-box" class="mb-5 bg-[#F3E8FF] border-2 border-[#9D84FF] text-[#9D84FF] px-5 py-3 rounded-xl text-sm sm:text-base font-jua brutal-badge hidden text-center">
+        💡 현재 상황: <span id="current-dialogue-title" class="font-sans font-bold text-gray-800">일반 회화</span>
     </div>
 
     <div id="quiz-section">
-        <div class="w-full bg-gray-200 h-1.5 sm:h-2 rounded-full mb-4 sm:mb-6">
-            <div id="progress-bar" class="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all" style="width: 0%"></div>
+        <!-- 🌟 진행률 바 -->
+        <div class="w-full bg-white h-4 sm:h-5 rounded-full mb-6 border-2 border-[#1f2937] shadow-[2px_2px_0px_#1f2937] overflow-hidden relative">
+            <div id="progress-bar" class="h-full transition-colors duration-300 border-r-2 border-[#1f2937]" style="width: 0%; background-color: #1f2937;"></div>
         </div>
 
-        <div class="flip-container h-[200px] mb-4 sm:mb-6">
+        <!-- 🃏 퀴즈 카드 -->
+        <div class="flip-container mb-6 sm:mb-8">
+            <div class="flip-shadow"></div>
             <div id="quiz-card" class="card-inner">
+                <!-- 앞면 (상위 태그에서 relative를 제거하여 위치 고정) -->
                 <div class="card-front">
-                    <span id="card-mode-badge" class="absolute top-3 left-3 bg-gray-100 text-gray-700 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded"></span>
-                    <div id="card-question" class="text-base sm:text-xl font-bold text-gray-900 text-center px-4 leading-relaxed break-keep"></div>
-                    <p class="text-[9px] sm:text-[11px] text-gray-400 absolute bottom-3 right-3">정답 제출 시 카드가 뒤집힙니다 🔄</p>
+                    <!-- 🌟 뱃지 -->
+                    <span id="card-mode-badge" class="absolute top-4 left-4 text-white text-xs sm:text-sm font-jua px-3 py-1 rounded-lg brutal-badge tracking-wide transition-colors"></span>
+                    <div id="card-question" class="text-lg sm:text-2xl font-black text-gray-900 text-center px-4 leading-relaxed break-keep mt-2"></div>
+                    <p class="text-[10px] sm:text-xs font-bold text-gray-400 absolute bottom-4 right-4 bg-gray-50 px-2 py-1 rounded-md border border-gray-200">정답 제출 시 뒤집힙니다 🔄</p>
                 </div>
+                <!-- 뒷면 (상위 태그에서 relative를 제거하여 위치 고정) -->
                 <div class="card-back">
-                    <span class="text-[10px] sm:text-xs font-bold text-blue-600 absolute top-3 left-3">정답 (ANSWER)</span>
-                    <div id="card-answer" class="text-base sm:text-xl font-bold text-blue-900 text-center px-4 leading-relaxed break-all"></div>
+                    <span class="absolute top-4 left-4 bg-white text-[#1f2937] text-xs sm:text-sm font-jua px-3 py-1 rounded-lg brutal-badge tracking-wide">ANSWER</span>
+                    <div id="card-answer" class="text-xl sm:text-3xl font-black text-[#1f2937] text-center px-4 leading-relaxed break-all mt-2"></div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm">
-            <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">영문 정답 입력</label>
-            <div class="flex flex-col sm:flex-row gap-2">
+        <!-- 📝 입력 및 컨트롤 박스 -->
+        <div class="brutal-box p-5 sm:p-7 relative z-10">
+            <label class="block text-sm sm:text-base font-jua text-gray-800 mb-2 tracking-wide">영문 정답 입력 ✍️</label>
+            <div class="flex flex-col sm:flex-row gap-3">
                 <input type="text" id="user-answer" placeholder="여기에 영어로 정답을 입력하세요."
-                       class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-base sm:text-lg"
+                       class="flex-1 px-4 py-3 brutal-input rounded-xl text-base sm:text-lg bg-gray-50 font-bold text-gray-800"
                        onkeyup="if(window.event.keyCode==13){checkAnswer()}">
-                <button onclick="checkAnswer()" id="submit-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 sm:py-3 rounded-xl transition-all text-sm sm:text-base">제출</button>
+
+                <!-- 🌟 제출 버튼 -->
+                <button onclick="checkAnswer()" id="submit-btn" class="w-full sm:w-auto text-white font-jua text-xl px-8 py-3 rounded-xl brutal-btn transition-colors">
+                    <span class="text-outline">제출</span>
+                </button>
             </div>
 
-            <div id="feedback" class="mt-4 text-center font-bold text-base sm:text-lg hidden"></div>
-
-            <div id="correct-action-box" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 hidden">
-                <button onclick="deleteFromWrongNotebook()" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm order-2 sm:order-1">이 문장 오답 창고에서 졸업 🎓</button>
-                <button onclick="nextQuestion()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm order-1 sm:order-2">다음 문장으로 넘어가기 ➡️</button>
+            <div class="min-h-[40px] mt-4 flex items-center justify-center">
+                <!-- 🌟 피드백 -->
+                <div id="feedback" class="text-center font-jua text-2xl hidden drop-shadow-sm w-full transition-colors"></div>
             </div>
 
-            <div id="wrong-choice-actions" class="mt-4 grid grid-cols-2 gap-2 sm:gap-3 hidden">
-                <button onclick="skipAndClearFromWrong()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm">창고에서 빼고 넘어가기 ↩️</button>
-                <button onclick="saveToWrongNotebook()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm shadow-sm">오답노트에 유지/저장 📌</button>
+            <!-- 정답 액션 버튼 -->
+            <div id="correct-action-box" class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
+                <button onclick="deleteFromWrongNotebook()" class="bg-white text-gray-700 font-jua text-lg py-3 rounded-xl brutal-btn order-2 sm:order-1 flex items-center justify-center gap-1 hover:bg-gray-50">
+                    오답 창고에서 졸업 🎓
+                </button>
+                <button onclick="nextQuestion()" class="bg-gray-800 text-white font-jua text-lg py-3 rounded-xl brutal-btn order-1 sm:order-2 flex items-center justify-center gap-1 hover:bg-gray-900">
+                    다음 문장 ➡️
+                </button>
+            </div>
+
+            <!-- 오답 액션 버튼 -->
+            <div id="wrong-choice-actions" class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
+                <button onclick="skipAndClearFromWrong()" class="bg-white text-gray-700 font-jua text-lg py-3 rounded-xl brutal-btn flex items-center justify-center gap-1 hover:bg-gray-50">
+                    창고에서 빼고 넘어가기 ↩️
+                </button>
+                <button onclick="saveToWrongNotebook()" class="bg-gray-800 text-white font-jua text-lg py-3 rounded-xl brutal-btn flex items-center justify-center gap-1 hover:bg-gray-900">
+                    오답노트에 유지/저장 📌
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="result-section" class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-lg text-center hidden">
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">🎉 복습 완료!</h2>
-        <p class="text-xs sm:text-sm text-gray-500 mb-6">수고하셨습니다. 이번 라운드 보관 리스트입니다.</p>
-        <div class="border-t pt-4 sm:pt-6 text-left">
-            <h3 class="text-sm sm:text-base font-bold text-red-600 mb-2">🚨 최종 보류된 오답 리스트:</h3>
-            <ul id="wrong-list" class="space-y-2 text-xs sm:text-sm text-gray-700 list-disc pl-5"></ul>
+    <!-- 🎉 결과 화면 -->
+    <div id="result-section" class="brutal-box p-8 sm:p-10 text-center hidden mt-10">
+        <h2 class="text-4xl sm:text-5xl font-jua text-[#9D84FF] mb-2" style="-webkit-text-stroke: 1.5px #1f2937;">🎉 복습 완료!</h2>
+        <p class="text-sm sm:text-base font-bold text-gray-500 mb-8 font-jua">수고하셨습니다. 이번 라운드 보관 리스트입니다.</p>
+
+        <div class="border-t-4 border-dashed border-gray-300 pt-6 text-left">
+            <h3 class="text-lg sm:text-xl font-jua text-gray-800 mb-4 bg-gray-100 inline-block px-3 py-1 rounded-lg brutal-badge">🚨 최종 보류된 오답 리스트</h3>
+            <ul id="wrong-list" class="space-y-3 text-sm sm:text-base text-gray-800 font-bold pl-2"></ul>
         </div>
-        <a href="/" class="mt-6 sm:mt-8 inline-block w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all text-sm">대시보드로 가기</a>
+
+        <a href="/" class="mt-10 inline-block w-full sm:w-auto bg-[#9D84FF] text-white font-jua text-xl px-10 py-4 rounded-xl brutal-btn">
+            <span class="text-outline">대시보드로 가기 🏠</span>
+        </a>
     </div>
 </div>
 
@@ -91,6 +149,12 @@
     let wrongAnswers = [];
     const isAllWrongMode = window.location.pathname.includes('all-wrong');
 
+    const categoryThemes = {
+        'WORD': { color: '#FF85A2', label: '🎯 WORD' },
+        'SENTENCE': { color: '#4DB8FF', label: '📰 SENTENCE' },
+        'DIALOGUE': { color: '#47D1A0', label: '💬 DIALOGUE' }
+    };
+
     function getCsrfHeaders() {
         const token = document.querySelector("meta[name='_csrf']")?.content;
         const header = document.querySelector("meta[name='_csrf_header']")?.content;
@@ -99,7 +163,7 @@
 
     function initQuiz() {
         if (!expressions || expressions.length === 0) {
-            document.getElementById('quiz-section').innerHTML = "<div class='text-center py-12 font-bold text-gray-400 text-sm'>복습할 데이터가 아직 존재하지 않습니다. 📭</div>";
+            document.getElementById('quiz-section').innerHTML = "<div class='text-center py-20 font-jua text-2xl text-gray-400'>복습할 데이터가 아직 존재하지 않습니다. 📭</div>";
             return;
         }
         showQuestion();
@@ -121,9 +185,17 @@
         document.getElementById('progress-bar').style.width = progress + '%';
 
         if (current) {
+            const theme = categoryThemes[current.category] || categoryThemes['WORD'];
+
+            document.getElementById('progress-bar').style.backgroundColor = theme.color;
+            document.getElementById('submit-btn').style.backgroundColor = theme.color;
+
+            const badge = document.getElementById('card-mode-badge');
+            badge.style.backgroundColor = theme.color;
+            badge.innerText = current.category === 'DIALOGUE' ? `💬 DIALOGUE (${current.speaker})` : theme.label;
+
             document.getElementById('card-question').innerText = current.korean;
             document.getElementById('card-answer').innerText = current.english;
-            document.getElementById('card-mode-badge').innerText = current.category === 'DIALOGUE' ? "💬 DIALOGUE (" + current.speaker + ")" : (current.category === 'WORD' ? '🎯 WORD' : '📰 SENTENCE');
 
             if (current.dialogueTitle) {
                 document.getElementById('current-dialogue-title').innerText = current.dialogueTitle;
@@ -138,9 +210,10 @@
     function checkAnswer() {
         const current = expressions[currentIndex];
         const userAns = document.getElementById('user-answer').value.trim().toLowerCase();
-
         const originalAns = current.english.trim().toLowerCase();
         const feedbackDiv = document.getElementById('feedback');
+
+        const theme = categoryThemes[current.category] || categoryThemes['WORD'];
 
         document.getElementById('quiz-card').classList.add('flipped');
         feedbackDiv.classList.remove('hidden');
@@ -149,14 +222,15 @@
 
         if (userAns === originalAns || (originalAns.includes(userAns) && userAns.length > 2)) {
             feedbackDiv.innerText = "⭕ 정답입니다!";
-            feedbackDiv.className = "mt-4 text-center font-bold text-base sm:text-lg text-green-600";
+            feedbackDiv.className = "text-center font-jua text-2xl drop-shadow-sm w-full transition-colors";
+            feedbackDiv.style.color = theme.color;
             document.getElementById('correct-action-box').classList.remove('hidden');
         } else {
             feedbackDiv.innerText = "❌ 틀렸습니다!";
-            feedbackDiv.className = "mt-4 text-center font-bold text-base sm:text-lg text-red-600";
+            feedbackDiv.className = "text-center font-jua text-2xl text-[#FF85A2] drop-shadow-sm w-full transition-colors";
+            feedbackDiv.style.color = "";
             document.getElementById('wrong-choice-actions').classList.remove('hidden');
 
-            // 🚀 핵심: 오답 판정이 나자마자 즉각적으로 DB에 실시간 꽂아버림 (탈주 완벽 방어!)
             if (!isAllWrongMode) {
                 fetch('/api/expressions/' + current.id + '/wrong', {
                     method: 'POST',
@@ -169,13 +243,11 @@
     }
 
     function saveToWrongNotebook() {
-        // 이미 checkAnswer에서 실시간 저장해버렸기 때문에, 버튼을 누르면 그냥 다음 문제로 넘어가기만 하면 됨!
         nextQuestion();
     }
 
     function skipAndClearFromWrong() {
         const current = expressions[currentIndex];
-        // '창고에서 빼기'를 눌렀으므로, 아까 실시간으로 넣었던 걸 다시 false로 되돌림
         fetch('/api/expressions/' + current.id + '/clear-wrong', {
             method: 'POST',
             headers: getCsrfHeaders()
@@ -200,12 +272,21 @@
             showQuestion();
         } else {
             document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('dialogue-title-box').classList.add('hidden');
             document.getElementById('result-section').classList.remove('hidden');
             const wrongListUl = document.getElementById('wrong-list');
 
             wrongListUl.innerHTML = wrongAnswers.length === 0
-                ? "<li class='text-green-600 font-semibold list-none'>💯 완벽해요! 저장된 오답이 없습니다.</li>"
-                : wrongAnswers.map(item => `<li><strong>[${item.category}]</strong> ${item.english} <span class='text-gray-400'>(${item.korean})</span></li>`).join('');
+                ? "<li class='text-[#9D84FF] font-jua text-xl list-none text-center py-5 bg-white rounded-xl border-2 border-dashed border-[#9D84FF]'>💯 완벽해요! 저장된 오답이 없습니다.</li>"
+                : wrongAnswers.map(item => {
+                    const theme = categoryThemes[item.category] || categoryThemes['WORD'];
+                    return `
+                    <li class='bg-white p-4 rounded-xl border-2 border-[#1f2937] shadow-[2px_3px_0px_#1f2937] flex flex-col gap-1'>
+                        <span class='text-xs font-black uppercase' style='color: ${theme.color}'>[${item.category}]</span>
+                        <span class='text-base text-gray-900'>${item.english}</span>
+                        <span class='text-sm text-gray-500'>${item.korean}</span>
+                    </li>`;
+                }).join('');
         }
     }
 
