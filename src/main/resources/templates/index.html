@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- 🚀 [추가됨] Spring Security CSRF 토큰 메타 태그 -->
+    <meta name="_csrf" th:content="${_csrf?.token}" th:if="${_csrf} != null"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}" th:if="${_csrf} != null"/>
+
     <title>영어 스터디 대시보드</title>
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -199,6 +204,13 @@
 </div>
 
 <script>
+    // 🚀 [추가됨] CSRF 토큰을 추출해오는 공통 함수
+    function getCsrfHeaders() {
+        const token = document.querySelector("meta[name='_csrf']")?.content;
+        const header = document.querySelector("meta[name='_csrf_header']")?.content;
+        return (token && header) ? { [header]: token } : {};
+    }
+
     // [PDF 업로드 비동기 핸들러]
     document.getElementById('uploadForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -218,6 +230,7 @@
 
         fetch('/api/material/upload-pdf', {
             method: 'POST',
+            headers: getCsrfHeaders(), // 🚀 [추가됨] CSRF 헤더 동봉
             body: formData
         })
         .then(response => {
@@ -244,7 +257,8 @@
         }
 
         fetch('/api/material/' + materialId + '/delete', {
-            method: 'POST'
+            method: 'POST',
+            headers: getCsrfHeaders() // 🚀 [추가됨] CSRF 헤더 동봉
         })
         .then(response => response.text())
         .then(data => {

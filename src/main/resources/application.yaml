@@ -20,7 +20,7 @@ spring:
 # 스터디 대용량 파일 및 톰캣 트래픽 제어
 servlet:
   multipart:
-    max-file-size: 30MB
+    max-file-size: 50MB
     max-request-size: 50MB
 server:
   tomcat:
