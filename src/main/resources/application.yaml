@@ -1,5 +1,5 @@
 spring:
-  # 🗄️ Supabase DB 설정 (성공한 aws-1 주소 및 패스워드 완벽 세팅)
+  # 🗄️ Supabase DB 설정
   datasource:
     url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
     username: postgres.alyphoareyjeeizdbwqx
@@ -17,11 +17,12 @@ spring:
       ddl-auto: update
     show-sql: true
 
-# 스터디 대용량 파일 및 톰캣 트래픽 제어
-servlet:
-  multipart:
-    max-file-size: 50MB
-    max-request-size: 50MB
+  # 🚀 수정됨: servlet 설정을 spring 하위로 이동
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
 server:
   tomcat:
     connection-timeout: 60000
