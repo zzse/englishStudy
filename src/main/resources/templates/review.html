@@ -3,37 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf?.token}" th:if="${_csrf} != null"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}" th:if="${_csrf} != null"/>
+
     <title>영어 스터디 복습룸</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .flip-container { perspective: 1000px; }
-        .card-inner {
-            position: relative;
-            width: 100%;
-            height: 200px;
-            transform-style: preserve-3d;
-            transition: transform 0.4s;
-        }
+        .card-inner { position: relative; width: 100%; height: 200px; transform-style: preserve-3d; transition: transform 0.4s; }
         .flipped { transform: rotateY(180deg); }
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem sm:p-6;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            border: 1px solid rgb(229 231 235);
-        }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid rgb(229 231 235); }
         .card-front { background-color: white; }
-        .card-back {
-            transform: rotateY(180deg);
-            background-color: rgb(240 246 255);
-        }
+        .card-back { transform: rotateY(180deg); background-color: rgb(240 246 255); }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 sm:p-8">
@@ -41,7 +22,7 @@
 <div class="max-w-2xl mx-auto">
     <div class="flex justify-between items-center mb-4 sm:mb-6">
         <a href="/" class="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-800">⬅️ 메인으로</a>
-        <h1 class="text-lg sm:text-2xl font-extrabold text-gray-800 truncate pl-4" th:text="${title}"></h1>
+        <h1 class="text-lg sm:text-2xl font-extrabold text-gray-800 truncate pl-4" th:text="${title}">복습 테스트</h1>
     </div>
 
     <div id="dialogue-title-box" class="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-sm hidden">
@@ -73,29 +54,19 @@
                 <input type="text" id="user-answer" placeholder="여기에 영어로 정답을 입력하세요."
                        class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-base sm:text-lg"
                        onkeyup="if(window.event.keyCode==13){checkAnswer()}">
-                <button onclick="checkAnswer()" id="submit-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 sm:py-3 rounded-xl transition-all text-sm sm:text-base">
-                    제출
-                </button>
+                <button onclick="checkAnswer()" id="submit-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 sm:py-3 rounded-xl transition-all text-sm sm:text-base">제출</button>
             </div>
 
             <div id="feedback" class="mt-4 text-center font-bold text-base sm:text-lg hidden"></div>
 
             <div id="correct-action-box" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 hidden">
-                <button onclick="deleteFromWrongNotebook()" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm shadow-sm order-2 sm:order-1">
-                    이 문장 오답 창고에서 졸업 🎓
-                </button>
-                <button onclick="nextQuestion()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm order-1 sm:order-2">
-                    다음 문장으로 넘어가기 ➡️
-                </button>
+                <button onclick="deleteFromWrongNotebook()" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm order-2 sm:order-1">이 문장 오답 창고에서 졸업 🎓</button>
+                <button onclick="nextQuestion()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm order-1 sm:order-2">다음 문장으로 넘어가기 ➡️</button>
             </div>
 
             <div id="wrong-choice-actions" class="mt-4 grid grid-cols-2 gap-2 sm:gap-3 hidden">
-                <button onclick="skipAndClearFromWrong()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm">
-                    창고에서 빼고 넘어가기 ↩️
-                </button>
-                <button onclick="saveToWrongNotebook()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm shadow-sm">
-                    오답노트에 유지/저장 📌
-                </button>
+                <button onclick="skipAndClearFromWrong()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm">창고에서 빼고 넘어가기 ↩️</button>
+                <button onclick="saveToWrongNotebook()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all text-center text-xs sm:text-sm shadow-sm">오답노트에 유지/저장 📌</button>
             </div>
         </div>
     </div>
@@ -104,22 +75,27 @@
         <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">🎉 복습 완료!</h2>
         <p class="text-xs sm:text-sm text-gray-500 mb-6">수고하셨습니다. 이번 라운드 보관 리스트입니다.</p>
         <div class="border-t pt-4 sm:pt-6 text-left">
-            <h3 class="text-sm sm:text-base font-bold text-red-600 mb-2">🚨 이번 라운드에 최종 보류된 오답:</h3>
+            <h3 class="text-sm sm:text-base font-bold text-red-600 mb-2">🚨 최종 보류된 오답 리스트:</h3>
             <ul id="wrong-list" class="space-y-2 text-xs sm:text-sm text-gray-700 list-disc pl-5"></ul>
         </div>
-        <a href="/" class="mt-6 sm:mt-8 inline-block w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all text-sm">
-            대시보드로 가기
-        </a>
+        <a href="/" class="mt-6 sm:mt-8 inline-block w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all text-sm">대시보드로 가기</a>
     </div>
 </div>
 
 <script th:inline="javascript">
-    const expressions = [[${expressions}]];
+    /*<![CDATA[*/
+    const rawJson = '[(${expressionsJson})]';
+    const expressions = rawJson ? JSON.parse(rawJson) : [];
+
     let currentIndex = 0;
     let wrongAnswers = [];
-
-    // 주소창 url 판단을 위해 전역 변수 하나 추가 (누적 오답 창고 모드인지 체크용)
     const isAllWrongMode = window.location.pathname.includes('all-wrong');
+
+    function getCsrfHeaders() {
+        const token = document.querySelector("meta[name='_csrf']")?.content;
+        const header = document.querySelector("meta[name='_csrf_header']")?.content;
+        return (token && header) ? { [header]: token } : {};
+    }
 
     function initQuiz() {
         if (!expressions || expressions.length === 0) {
@@ -138,17 +114,16 @@
         document.getElementById('user-answer').disabled = false;
         document.getElementById('submit-btn').disabled = false;
         document.getElementById('feedback').classList.add('hidden');
-
         document.getElementById('correct-action-box').classList.add('hidden');
         document.getElementById('wrong-choice-actions').classList.add('hidden');
 
         const progress = (currentIndex / expressions.length) * 100;
         document.getElementById('progress-bar').style.width = progress + '%';
 
-        if (current.category === 'DIALOGUE') {
+        if (current) {
             document.getElementById('card-question').innerText = current.korean;
             document.getElementById('card-answer').innerText = current.english;
-            document.getElementById('card-mode-badge').innerText = "💬 DIALOGUE (Role: " + current.speaker + ")";
+            document.getElementById('card-mode-badge').innerText = current.category === 'DIALOGUE' ? "💬 DIALOGUE (" + current.speaker + ")" : (current.category === 'WORD' ? '🎯 WORD' : '📰 SENTENCE');
 
             if (current.dialogueTitle) {
                 document.getElementById('current-dialogue-title').innerText = current.dialogueTitle;
@@ -156,27 +131,19 @@
             } else {
                 document.getElementById('dialogue-title-box').classList.add('hidden');
             }
-        } else {
-            document.getElementById('dialogue-title-box').classList.add('hidden');
-            document.getElementById('card-mode-badge').innerText = current.category === 'WORD' ? '🎯 WORD' : '📰 SENTENCE';
-            document.getElementById('card-question').innerText = current.korean;
-            document.getElementById('card-answer').innerText = current.english;
         }
-
         setTimeout(() => { document.getElementById('user-answer').focus(); }, 50);
     }
 
     function checkAnswer() {
         const current = expressions[currentIndex];
         const userAns = document.getElementById('user-answer').value.trim().toLowerCase();
+
         const originalAns = current.english.trim().toLowerCase();
-
         const feedbackDiv = document.getElementById('feedback');
-        const card = document.getElementById('quiz-card');
 
-        card.classList.add('flipped');
+        document.getElementById('quiz-card').classList.add('flipped');
         feedbackDiv.classList.remove('hidden');
-
         document.getElementById('user-answer').disabled = true;
         document.getElementById('submit-btn').disabled = true;
 
@@ -189,54 +156,42 @@
             feedbackDiv.className = "mt-4 text-center font-bold text-base sm:text-lg text-red-600";
             document.getElementById('wrong-choice-actions').classList.remove('hidden');
 
-            // 일반 교재 모드에서 틀린 경우 결과창 리스트에 표기하기 위해 자동 수집
-            if (!isAllWrongMode && !wrongAnswers.includes(current)) {
-                wrongAnswers.push(current);
+            // 🚀 핵심: 오답 판정이 나자마자 즉각적으로 DB에 실시간 꽂아버림 (탈주 완벽 방어!)
+            if (!isAllWrongMode) {
+                fetch('/api/expressions/' + current.id + '/wrong', {
+                    method: 'POST',
+                    headers: getCsrfHeaders()
+                }).catch(err => console.error("Auto-save failed", err));
+
+                if (!wrongAnswers.some(e => e.id === current.id)) wrongAnswers.push(current);
             }
         }
     }
 
-    // 틀렸을 때 [오답노트에 유지/저장] 버튼 누를 시 호출
     function saveToWrongNotebook() {
-        const current = expressions[currentIndex];
-
-        // 오답 창고 모드라면 이미 true이므로 백엔드 연동 없이 결과창 리스트에만 남기고 즉시 패스
-        if (isAllWrongMode) {
-            if(!wrongAnswers.includes(current)) wrongAnswers.push(current);
-            nextQuestion();
-            return;
-        }
-
-        // 일반 교재 모드라면 신규 등록 비동기 요청 수행
-        fetch('/api/expressions/' + current.id + '/wrong', { method: 'POST' })
-            .then(() => { nextQuestion(); })
-            .catch(err => { nextQuestion(); });
+        // 이미 checkAnswer에서 실시간 저장해버렸기 때문에, 버튼을 누르면 그냥 다음 문제로 넘어가기만 하면 됨!
+        nextQuestion();
     }
 
-    // 🚨 [새로 추가] 틀렸지만 창고에서 제외하고 그냥 넘어갈 때 백엔드 연동 처리
     function skipAndClearFromWrong() {
         const current = expressions[currentIndex];
-
-        // 오답 창고 복습 도중이었다면 백엔드에 전송해 즉시 오답 해제(isWrong = false) 처리
-        if (isAllWrongMode) {
-            fetch('/api/expressions/' + current.id + '/clear-wrong', { method: 'POST' })
-                .then(() => { nextQuestion(); })
-                .catch(err => { nextQuestion(); });
-        } else {
-            // 일반 교재 모드라면 애초에 창고에 없었으므로 결과창 목록에서만 빼고 그냥 통과
+        // '창고에서 빼기'를 눌렀으므로, 아까 실시간으로 넣었던 걸 다시 false로 되돌림
+        fetch('/api/expressions/' + current.id + '/clear-wrong', {
+            method: 'POST',
+            headers: getCsrfHeaders()
+        })
+        .finally(() => {
             wrongAnswers = wrongAnswers.filter(item => item.id !== current.id);
             nextQuestion();
-        }
+        });
     }
 
-    // 맞췄을 때 [이 문장 오답 창고에서 졸업 🎓] 버튼 누를 시 호출
     function deleteFromWrongNotebook() {
-        const current = expressions[currentIndex];
-        fetch('/api/expressions/' + current.id + '/clear-wrong', { method: 'POST' })
-            .then(() => {
-                nextQuestion();
-            })
-            .catch(err => { nextQuestion(); });
+        fetch('/api/expressions/' + expressions[currentIndex].id + '/clear-wrong', {
+            method: 'POST',
+            headers: getCsrfHeaders()
+        })
+        .finally(() => nextQuestion());
     }
 
     function nextQuestion() {
@@ -245,26 +200,17 @@
             showQuestion();
         } else {
             document.getElementById('quiz-section').classList.add('hidden');
-            document.getElementById('dialogue-title-box').classList.add('hidden');
             document.getElementById('result-section').classList.remove('hidden');
-
             const wrongListUl = document.getElementById('wrong-list');
-            wrongListUl.innerHTML = '';
 
-            if(wrongAnswers.length === 0) {
-                wrongListUl.innerHTML = "<li class='text-green-600 font-semibold list-none text-xs sm:text-sm'>💯 완벽해요! 저장된 오답이 없습니다.</li>";
-            } else {
-                wrongAnswers.forEach(item => {
-                    const li = document.createElement('li');
-                    let tag = item.dialogueTitle ? `[${item.dialogueTitle}] ` : `[${item.category}] `;
-                    li.innerHTML = `<strong>${tag}</strong> ${item.english} <span class='text-gray-400'>(${item.korean})</span>`;
-                    wrongListUl.appendChild(li);
-                });
-            }
+            wrongListUl.innerHTML = wrongAnswers.length === 0
+                ? "<li class='text-green-600 font-semibold list-none'>💯 완벽해요! 저장된 오답이 없습니다.</li>"
+                : wrongAnswers.map(item => `<li><strong>[${item.category}]</strong> ${item.english} <span class='text-gray-400'>(${item.korean})</span></li>`).join('');
         }
     }
 
     window.onload = initQuiz;
+    /*]]>*/
 </script>
 </body>
 </html>

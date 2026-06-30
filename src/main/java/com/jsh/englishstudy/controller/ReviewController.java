@@ -1,18 +1,23 @@
 package com.jsh.englishstudy.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jsh.englishstudy.entity.Expression;
 import com.jsh.englishstudy.entity.StudyMaterial;
+import com.jsh.englishstudy.entity.User;
 import com.jsh.englishstudy.repository.ExpressionRepository;
 import com.jsh.englishstudy.repository.StudyMaterialRepository;
 import com.jsh.englishstudy.service.PdfParserService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 @Controller
@@ -22,119 +27,189 @@ public class ReviewController {
     private final StudyMaterialRepository materialRepository;
     private final ExpressionRepository expressionRepository;
     private final PdfParserService pdfParserService;
+    private final ObjectMapper objectMapper;
 
-    // 🚨 [수정 완료] 자꾸 중복 데이터를 만들던 @PostConstruct (initData) 구역을 완전히 삭제했습니다.
-    // 이제 서버를 아무리 껐다 켜도 DB 파일이 마음대로 더러워지지 않습니다.
-
-    // 1. 메인 화면 대시보드 (교재 목록 & 누적 오답 카운트)
+    /**
+     * 메인 대시보드
+     */
     @GetMapping("/")
-    public String indexPage(Model model) {
-        model.addAttribute("materials", materialRepository.findAll());
-        model.addAttribute("totalWrongCount", expressionRepository.findByIsWrong(true).size());
+    public String index(HttpSession session, Model model) {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) return "redirect:/login";
+
+        List<StudyMaterial> materials = materialRepository.findByUser(loginUser);
+        model.addAttribute("materials", materials);
+
+        List<Expression> wrongList = expressionRepository.findByUserAndWrong(loginUser, true);
+        model.addAttribute("totalWrongCount", wrongList.size());
+
         return "index";
     }
 
-    // 2. 날짜별 교재 진입 시 -> 단어/문장/회화 세부 선택 메뉴판
-    @GetMapping("/review/material/{id}")
-    public String materialMenu(@PathVariable Long id, Model model) {
-        StudyMaterial mat = materialRepository.findById(id).orElseThrow();
-        model.addAttribute("material", mat);
+    @GetMapping("/material/{id}/menu")
+    public String materialMenu(@PathVariable Long id,
+                               HttpSession session,
+                               Model model) {
+
+        User user = (User) session.getAttribute("loginUser");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        StudyMaterial material =
+                materialRepository.findById(id).orElse(null);
+
+        if (material == null
+                || !material.getUser().getId().equals(user.getId())) {
+            return "redirect:/";
+        }
+
+        model.addAttribute("material", material);
         return "material-menu";
     }
 
-    // 3. 교재 메뉴판에서 최종 선택 시 -> 실제 한 장씩 푸는 퀴즈 화면 진입
-    @GetMapping("/review/material/{id}/{category}")
-    public String reviewMaterialCategory(@PathVariable Long id, @PathVariable String category, Model model) {
-        StudyMaterial mat = materialRepository.findById(id).orElseThrow();
-        List<Expression> list = expressionRepository.findByMaterialIdAndCategory(id, category.toUpperCase());
 
-        if ("WORD".equalsIgnoreCase(category)) {
-            Collections.shuffle(list); // 단어는 무작위 섞기
+    /**
+     * PDF 업로드 & 파싱
+     */
+    @PostMapping("/api/material/upload-pdf")
+    @ResponseBody
+    public ResponseEntity<?> uploadPdf(
+            @RequestParam("pdfFile") MultipartFile pdfFile,
+            HttpSession session) {
+
+        User user = (User) session.getAttribute("loginUser");
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String typeTitle = "WORD".equalsIgnoreCase(category) ? "단어" : "SENTENCE".equalsIgnoreCase(category) ? "시사 문장" : "회화 롤플레잉";
-        model.addAttribute("title", mat.getTitle() + " ➡️ " + typeTitle + " 테스트");
-        model.addAttribute("expressions", list);
-        return "review";
-    }
+        if (pdfFile == null || pdfFile.isEmpty()
+                || !pdfFile.getOriginalFilename().toLowerCase().endsWith(".pdf")) {
+            return ResponseEntity.badRequest().body("Invalid PDF file");
+        }
 
-    // 4. 누적 오답 창고 전체 복습 퀴즈 진입
-    @GetMapping("/review/all-wrong")
-    public String allWrongPage(Model model) {
-        List<Expression> wrongList = expressionRepository.findByIsWrong(true);
-        model.addAttribute("title", "🚨 누적 오답 창고 전체 복습");
-        model.addAttribute("expressions", wrongList);
-        return "review";
-    }
-
-    // [REST API] 사용자가 틀렸을 때 비동기로 호출되어 오답 마킹 수행
-    @PostMapping("/api/expressions/{id}/wrong")
-    @ResponseBody
-    public String markAsWrong(@PathVariable Long id) {
-        Expression exp = expressionRepository.findById(id).orElseThrow();
-        exp.setWrong(true);
-        expressionRepository.save(exp);
-        return "success";
-    }
-
-    // 5. PDF 업로드 및 파싱 처리 API (★ 오직 이 주소를 통해서만 데이터가 새롭게 인서트됩니다 ★)
-    @PostMapping("/api/material/upload-pdf")
-    public String uploadPdf(@RequestParam("pdfFile") MultipartFile file) {
         try {
-            if (file.isEmpty()) {
-                return "redirect:/?error=empty";
-            }
+            // 1️⃣ 교재 저장
+            StudyMaterial material = new StudyMaterial(
+                    pdfFile.getOriginalFilename(),
+                    LocalDate.now()
+            );
+            material.setUser(user);
+            materialRepository.save(material);
 
-            // 1. 파일명 추출 (예: "20260615 슈퍼 엘니뇨 뉴스.pdf")
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null) return "redirect:/?error=invalid_name";
+            List<Expression> expressions =
+                    pdfParserService.parsePdfToExpressions(pdfFile, material, user);
 
-            // 확장자 제거 ("20260615 슈퍼 엘니뇨 뉴스")
-            String cleanName = originalFilename.substring(0, originalFilename.lastIndexOf(".")).trim();
+            expressions.forEach(e -> e.setWrong(false));
 
-            String title = cleanName;
-            LocalDate studyDate = LocalDate.now();
+            expressionRepository.saveAll(expressions);
 
-            // 2. 정규식으로 앞자리 8자리 숫자(YYYYMMDD) 추출 시도
-            java.util.regex.Pattern datePattern = java.util.regex.Pattern.compile("^(\\d{4})(\\d{2})(\\d{2})(.*)");
-            java.util.regex.Matcher matcher = datePattern.matcher(cleanName);
-
-            if (matcher.matches()) {
-                int year = Integer.parseInt(matcher.group(1));
-                int month = Integer.parseInt(matcher.group(2));
-                int day = Integer.parseInt(matcher.group(3));
-
-                studyDate = LocalDate.of(year, month, day);
-
-                title = matcher.group(4).trim();
-                if (title.isEmpty()) {
-                    title = "스터디 교재 (" + studyDate + ")";
-                }
-            }
-
-            // 3. 새 교재 마스터 정보 저장
-            StudyMaterial newMaterial = new StudyMaterial(title, studyDate);
-            StudyMaterial savedMaterial = materialRepository.save(newMaterial);
-
-            // 4. PDF 파싱 서비스를 통해 단어/문장/회화 리스트 추출 및 저장
-            List<Expression> parsedExpressions = pdfParserService.parsePdfToExpressions(file, savedMaterial.getId());
-            expressionRepository.saveAll(parsedExpressions);
+            return ResponseEntity.ok().build();
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/?error=upload_failed";
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * 학습 세트 삭제
+     */
+    @PostMapping("/api/material/{id}/delete")
+    @ResponseBody
+    public String deleteMaterial(@PathVariable Long id,
+                                 HttpSession session) {
+
+        User user = (User) session.getAttribute("loginUser");
+        if (user == null) {
+            return "unauthorized";
         }
 
-        return "redirect:/"; // 성공 시 메인 대시보드로 새로고침
+        StudyMaterial material =
+                materialRepository.findById(id).orElse(null);
+
+        if (material == null
+                || !material.getUser().getId().equals(user.getId())) {
+            return "unauthorized";
+        }
+
+        // 🔥 1️⃣ Expression 먼저 삭제
+        expressionRepository.deleteByStudyMaterialId(id);
+
+        // 🔥 2️⃣ StudyMaterial 삭제
+        materialRepository.delete(material);
+
+        return "success";
+    }
+
+    /**
+     * 교재 + 카테고리별 복습 화면
+     */
+    @GetMapping("/review/material/{id}/{category}")
+    public String reviewMaterial(
+            @PathVariable Long id,
+            @PathVariable String category,
+            HttpSession session,
+            Model model) throws Exception {
+
+        User user = (User) session.getAttribute("loginUser");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        String normalizedCategory = category.toUpperCase();
+
+        List<Expression> expressions =
+                expressionRepository.findByStudyMaterialIdAndCategory(
+                        id,
+                        normalizedCategory
+                );
+
+        model.addAttribute(
+                "expressionsJson",
+                objectMapper.writeValueAsString(expressions)
+        );
+
+        return "review";
+    }
+
+    @PostMapping("/api/expressions/{id}/wrong")
+    @ResponseBody
+    public String markAsWrong(@PathVariable Long id) {
+        expressionRepository.findById(id).ifPresent(e -> {
+            e.setWrong(true);
+            expressionRepository.save(e);
+        });
+        return "success";
     }
 
     @PostMapping("/api/expressions/{id}/clear-wrong")
     @ResponseBody
-    public String clearFromWrong(@PathVariable Long id) {
-        Expression exp = expressionRepository.findById(id).orElseThrow();
-        exp.setWrong(false);
-        expressionRepository.save(exp);
+    public String clearWrong(@PathVariable Long id) {
+        expressionRepository.findById(id).ifPresent(e -> {
+            e.setWrong(false);
+            expressionRepository.save(e);
+        });
         return "success";
     }
 
+    @GetMapping("/review/all-wrong")
+    public String reviewAllWrong(HttpSession session, Model model) throws Exception {
+        User loginUser = (User) session.getAttribute("loginUser");
+        if (loginUser == null) return "redirect:/login";
+
+        // 1. 해당 유저의 오답(wrong=true)만 데이터베이스에서 모두 조회
+        List<Expression> list = expressionRepository.findByUserAndWrong(loginUser, true);
+
+        // 2. 화면에 던져주기 위해 JSON으로 변환
+        model.addAttribute("expressionsJson", objectMapper.writeValueAsString(list));
+
+        // 3. 화면 상단 타이틀 설정
+        model.addAttribute("title", "🔥 전체 오답 마스터");
+
+        // 4. review.html을 그대로 재사용! (HTML을 또 만들 필요가 없습니다)
+        return "review";
+    }
+
 }
+

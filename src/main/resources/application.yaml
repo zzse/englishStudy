@@ -15,7 +15,7 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
 
 # 스터디 대용량 파일 및 톰캣 트래픽 제어
 servlet:

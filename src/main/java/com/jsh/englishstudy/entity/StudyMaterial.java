@@ -1,20 +1,35 @@
 package com.jsh.englishstudy.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "study_material")
 @Getter @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class StudyMaterial {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;       // 예: 260615 슈퍼 엘니뇨
-    private LocalDate studyDate; // 스터디 날짜 (날짜별 조회용)
+    // PDF 제목
+    @Column(nullable = false)
+    private String title;
+
+    // 학습 날짜
+    @Column(name = "study_date")
+    private LocalDate studyDate;
+
+    // 소유자
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
+    private User user;
 
     public StudyMaterial(String title, LocalDate studyDate) {
         this.title = title;
