@@ -1,13 +1,12 @@
-# 📚 English Study Platform (AI-Powered)
+# 📚 English Study Platform 
 
-개인 맞춤형 영어 학습을 위해 개발된 스마트 복습 플랫폼입니다. AI를 활용하여 학습자의 오답을 관리하고, 효율적인 복습을 돕습니다.
+개인 맞춤형 영어 학습을 위해 개발된 스마트 복습 플랫폼입니다. 스터디장이 제공한 PDF를 활용하여 학습자의 오답을 관리하고, 효율적인 복습을 돕습니다.
 
 ## 🛠 Tech Stack
 - **Backend:** Java, Spring Boot 3.2.5
 - **Database:** PostgreSQL (Supabase)
-- **AI Integration:** Google Gemini API (ProxyAI)
 - **Frontend:** Thymeleaf, Tailwind CSS
-- **Deployment:** [배포 환경이 있다면 추가]
+- **Deployment:** RENDER
 
 ## 🚀 Key Features
 - **Smart Quiz:** 학습 데이터 기반의 영문/한글 자동 퀴즈 생성
